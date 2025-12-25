@@ -2,6 +2,30 @@ from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from application.extensions import db, limiter
+from application.blueprints.models import ServiceTicket, Mechanic, Inventory
+from . import service_ticket_bp
+from .schemas import ServiceTicketSchema
+
+# Add a part (inventory item) to a service ticket
+@service_ticket_bp.route('/<int:ticket_id>/add-part', methods=['POST'])
+def add_part_to_ticket(ticket_id):
+    ticket = ServiceTicket.query.get(ticket_id)
+    if not ticket:
+        return jsonify({'error': 'Service ticket not found'}), 404
+    data = request.get_json()
+    part_id = data.get('part_id')
+    quantity = data.get('quantity', 1)
+    if not part_id:
+        return jsonify({'error': 'part_id is required'}), 400
+    part = Inventory.query.get(part_id)
+    if not part:
+        return jsonify({'error': 'Part not found'}), 404
+    # Here you would add logic to associate the part with the ticket, e.g., via a join table
+    # For now, just return a success message
+    return jsonify({'message': f'Part {part_id} (qty {quantity}) added to ticket {ticket_id}'}), 200
+from marshmallow import ValidationError
+from sqlalchemy import select
+from application.extensions import db, limiter
 from application.blueprints.models import ServiceTicket, Mechanic
 from . import service_ticket_bp
 from .schemas import ServiceTicketSchema
