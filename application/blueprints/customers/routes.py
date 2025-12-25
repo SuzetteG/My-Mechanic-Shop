@@ -1,74 +1,127 @@
-from . import customers_bp
-from .userSchemas import Customer_schema, Customers_schema
 from flask import request, jsonify
-from ..models import Customers
-from ...extensions import db
-from sqlalchemy import select
+from . import customers_bp
 from marshmallow import ValidationError
+from sqlalchemy import select
+from application.extensions import db, limiter
+from application.blueprints.models import Customer, ServiceTicket
+from application.utils.util import encode_token, token_required
+from .userSchemas import CustomerSchema, LoginSchema
 
-#CREATE A NEW CUSTOMER
-@customers_bp.route("/", methods=['POST'])
+customer_schema = CustomerSchema()
+customers_schema = CustomerSchema(many=True)
+login_schema = LoginSchema()
+
+@customers_bp.get("/<int:id>")
+def get_customer(id):
+    customer = db.session.get(Customer, id)
+    if not customer:
+        return jsonify({"error": "Customer not found"}), 404
+    return customer_schema.dump(customer), 200
+
+@customers_bp.post("/")
 def create_customer():
     try:
-        customer_data = Customer_schema.load(request.json)
+        customer = customer_schema.load(request.json or {}, session=db.session)
     except ValidationError as e:
         return jsonify(e.messages), 400
-    
-    query = select(Customers).where(Customers.Email == customer_data['Email'])
-    existing_customer = db.session.execute(query).scalars().all()    
-    if existing_customer:
-        return jsonify({"Error": "Email already exists"}), 400
-    
-    new_customer = Customers(**customer_data)    
-    db.session.add(new_customer)
+    db.session.add(customer)
     db.session.commit()
-    return Customer_schema.jsonify(new_customer), 201
+    return customer_schema.dump(customer), 201
 
-#GET ALL CUSTOMERS
-@customers_bp.route('/', methods=['GET'])
+@customers_bp.get("/")
 def get_customers():
-    query = select(Customers)
-    customers = db.session.execute(query).scalars().all()
-
-    return Customers_schema.jsonify(customers), 200
-
-#GET SPECIFIC CUSTOMER
-@customers_bp.route('/<int:customer_id>', methods=['GET'])
-def get_customer(customer_id):
-    query = select(Customers)
-    customers = db.session.get(Customers, customer_id)
-    
-    if customers:
-        return Customer_schema.jsonify(customers), 200
-    return jsonify({"Error": "Customer not found"}), 400
-
-#UPDATE A CUSTOMER
-@customers_bp.route('/<int:customer_id>', methods=['PUT'])
-def update_customer(customer_id):
-    customer = db.session.get(Customers, customer_id)
-    
-    if not customer:
-        return jsonify({"Error": "Customer not found"}), 400
-    
+    """
+    Pagination:
+      /customers?page=1&per_page=10
+    Prevents returning huge datasets, improves performance and UX.
+    """
+    # Read pagination params
     try:
-        customer_data = Customer_schema.load(request.json)
-    except ValidationError as e:
-        return jsonify(e.messages), 400
-    
-    for key, value in customer_data.items():
-        setattr(customer, key, value)
-    
-    db.session.commit()
-    return Customer_schema.jsonify(customer), 200
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+    except ValueError:
+        return jsonify({"error": "page and per_page must be integers"}), 400
 
-#DELETE SPECIFIC MEMBER
-@customers_bp.route("/<int:customer_id>", methods=['DELETE'])
-def delete_customer(customer_id):
-    customer = db.session.get(Customers, customer_id)
+    if page < 1:
+        page = 1
+    if per_page < 1:
+        per_page = 10
+    if per_page > 100:
+        per_page = 100  # safety cap
 
+    # Total count
+    from sqlalchemy import func
+    total = db.session.scalar(select(func.count(Customer.id)))
+
+    # Items
+    stmt = (
+        select(Customer)
+        .order_by(Customer.id.asc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
+    customers = db.session.scalars(stmt).all()
+
+    pages = (total + per_page - 1) // per_page if total else 0
+
+    return jsonify({
+        "page": page,
+        "per_page": per_page,
+        "total": total,
+        "pages": pages,
+        "items": customers_schema.dump(customers)
+    }), 200
+
+@customers_bp.put("/<int:id>")
+def update_customer(id):
+    customer = db.session.get(Customer, id)
     if not customer:
-        return jsonify({"error": "Customer not found."}), 400
-    
+        return jsonify({"error": "Customer not found"}), 404
+    data = request.json or {}
+    for field in ["first_name", "last_name", "email", "phone", "password", "dob"]:
+        if field in data:
+            setattr(customer, field, data[field])
+    db.session.commit()
+    return customer_schema.dump(customer), 200
+
+@customers_bp.delete("/")
+@token_required
+def delete_customer(user_id):
+    customer = db.session.get(Customer, user_id)
+    if not customer:
+        return jsonify({"error": "Customer not found"}), 404
     db.session.delete(customer)
     db.session.commit()
-    return jsonify({"message": f'Customer id: {customer_id}, successfully deleted.'}), 200
+    return jsonify({"message": f"Customer {user_id} deleted"}), 200
+
+@customers_bp.post("/login")
+@limiter.limit("10 per minute")
+def login():
+    try:
+        creds = login_schema.load(request.json or {})
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+    email = creds["email"]
+    password = creds["password"]
+    customer = db.session.scalar(select(Customer).where(Customer.email == email))
+    if not customer or customer.password != password:
+        return jsonify({"error": "Invalid credentials"}), 401
+    token = encode_token(customer.id)
+    return jsonify({"token": token}), 200
+
+@customers_bp.get("/my-tickets")
+def my_tickets():
+    # For demo, get all tickets (no user filtering)
+    tickets = db.session.scalars(select(ServiceTicket)).all()
+    data = [
+        {
+            "id": t.id,
+            "customer_id": t.customer_id,
+            "vin": t.vin,
+            "description": t.description,
+            "cost": str(t.cost) if t.cost is not None else None,
+            "service_date": t.service_date.isoformat(),
+        }
+        for t in tickets
+    ]
+    return jsonify(data), 200

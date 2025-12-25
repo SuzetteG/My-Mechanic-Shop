@@ -1,19 +1,22 @@
-# Service Ticket Marshmallow schemas will go here
-from application.extensions import ma
-from application.blueprints.models import Service_Tickets, Service_Tickets_Mechanics
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
+from marshmallow import fields
+from application.blueprints.models import ServiceTicket, Mechanic
 
-class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
+class MechanicMiniSchema(SQLAlchemyAutoSchema):
 	class Meta:
-		model = Service_Tickets
+		model = Mechanic
+		load_instance = False
+	id = auto_field()
+	first_name = auto_field()
+	last_name = auto_field()
+	email = auto_field()
+
+class ServiceTicketSchema(SQLAlchemyAutoSchema):
+	class Meta:
+		model = ServiceTicket
 		load_instance = True
 		include_fk = True
+	mechanics = fields.List(fields.Nested(MechanicMiniSchema), dump_only=True)
 
-ServiceTicket_schema = ServiceTicketSchema()
-ServiceTickets_schema = ServiceTicketSchema(many=True)
-
-class ServiceTicketMechanicSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		model = Service_Tickets_Mechanics
-
-ServiceTicketMechanic_schema = ServiceTicketMechanicSchema()
-ServiceTicketMechanics_schema = ServiceTicketMechanicSchema(many=True)
+service_ticket_schema = ServiceTicketSchema()
+service_tickets_schema = ServiceTicketSchema(many=True)

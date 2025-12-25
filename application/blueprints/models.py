@@ -1,44 +1,55 @@
+from datetime import datetime
 from ..extensions import db
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import date
-from typing import List
 
-class Customers(db.Model):
-    __tablename__ = 'customers'
-    CustomerId: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
-    Name: Mapped[str] = mapped_column(db.String(100), nullable=False)
-    Email: Mapped[str] = mapped_column(db.String(255), nullable=False, unique=True)
-    DOB: Mapped[date] = mapped_column(db.Date)
-    Password: Mapped[str] = mapped_column(db.String(255), nullable=False)
-    Address: Mapped[str] = mapped_column(db.String(255), nullable=False)
-    PhoneNumber: Mapped[str] = mapped_column(db.String(20), nullable=False)
-    ServiceTickets: Mapped[List["Service_Tickets"]] = relationship("Service_Tickets", back_populates="Customer")
+# Junction table for many-to-many relationship between ServiceTicket and Mechanic
+service_ticket_mechanics = db.Table(
+    "service_ticket_mechanics",
+    db.Column("service_ticket_id", db.Integer, db.ForeignKey("service_tickets.id"), primary_key=True),
+    db.Column("mechanic_id", db.Integer, db.ForeignKey("mechanics.id"), primary_key=True),
+)
 
-class Service_Tickets(db.Model):
-    __tablename__ = 'service_tickets'
-    TicketId: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
-    CustomerId: Mapped[int] = mapped_column(db.ForeignKey('customers.CustomerId'), nullable=False)
-    MechanicId: Mapped[int] = mapped_column(db.ForeignKey('mechanics.MechanicID'), nullable=True)
-    Description: Mapped[str] = mapped_column(db.String(255), nullable=False)
-    Status: Mapped[str] = mapped_column(db.String(50), nullable=False)
-    CreatedAt: Mapped[date] = mapped_column(db.Date, nullable=False)
-    Customer: Mapped["Customers"] = relationship("Customers", back_populates="ServiceTickets")
-    Mechanic: Mapped["Mechanics"] = relationship("Mechanics", back_populates="ServiceTickets")
+class Customer(db.Model):
+    __tablename__ = "customers"
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name  = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    address = db.Column(db.String(200), nullable=False)
+    dob = db.Column(db.Date, nullable=False)
+    service_tickets = db.relationship(
+        "ServiceTicket",
+        back_populates="customer",
+        cascade="all, delete-orphan"
+    )
 
-class Service_Tickets_Mechanics(db.Model):
-    __tablename__ = "service_tickets_mechanics"
-    Id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
-    TicketId: Mapped[int] = mapped_column(db.ForeignKey('service_tickets.TicketId'), nullable=False)
-    MechanicId: Mapped[int] = mapped_column(db.ForeignKey('mechanics.MechanicID'), nullable=False)
-    Role: Mapped[str] = mapped_column(db.String(100), nullable=False)
-    HoursWorked: Mapped[float] = mapped_column(db.Float, nullable=False)
+class Mechanic(db.Model):
+    __tablename__ = "mechanics"
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name  = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    address = db.Column(db.String(200), nullable=True)
+    salary  = db.Column(db.Numeric(10, 2), nullable=True)
+    service_tickets = db.relationship(
+        "ServiceTicket",
+        secondary=service_ticket_mechanics,
+        back_populates="mechanics"
+    )
 
-class Mechanics(db.Model):
-    __tablename__ = 'mechanics'
-    MechanicID: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
-    Name: Mapped[str] = mapped_column(db.String(100), nullable=False)
-    Email: Mapped[str] = mapped_column(db.String(255), nullable=False, unique=True)
-    Address: Mapped[str] = mapped_column(db.String(255), nullable=False)
-    PhoneNumber: Mapped[str] = mapped_column(db.String(20), nullable=False)
-    Salary: Mapped[float] = mapped_column(db.Float, nullable=False)
-    ServiceTickets: Mapped[List["Service_Tickets"]] = relationship("Service_Tickets", back_populates="Mechanic")
+class ServiceTicket(db.Model):
+    __tablename__ = "service_tickets"
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
+    vin = db.Column(db.String(17), nullable=False)
+    description = db.Column(db.String(255), nullable=False)
+    cost = db.Column(db.Numeric(10, 2), nullable=True)
+    service_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    customer = db.relationship("Customer", back_populates="service_tickets")
+    mechanics = db.relationship(
+        "Mechanic",
+        secondary=service_ticket_mechanics,
+        back_populates="service_tickets"
+    )
