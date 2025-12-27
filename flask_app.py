@@ -1,5 +1,5 @@
 from flask import Flask
-from config import ProductionConfig, DevelopmentConfig
+from config import ProductionConfig
 from app.extensions import db, limiter, cache
 
 from app.blueprints.customers.routes import customer_bp
@@ -8,7 +8,7 @@ from app.blueprints.service_tickets.routes import service_ticket_bp
 from app.blueprints.inventory.routes import inventory_bp
 
 
-def create_app(config_class=DevelopmentConfig):
+def create_app(config_class=ProductionConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -27,5 +27,5 @@ def create_app(config_class=DevelopmentConfig):
     return app
 
 
-app = create_app(ProductionConfig)
+app = create_app()
 
