@@ -1,31 +1,26 @@
-from app import create_app
-from app.extensions import db
-from flask import request, jsonify
+from flask import Flask
+from config import ProductionConfig, Config
+from app.extensions import db, limiter, cache
+from app.blueprints.customers import customers_bp
+from app.blueprints.mechanics import mechanics_bp
+from app.blueprints.service_tickets import service_tickets_bp
+from app.blueprints.inventory import inventory_bp
+from app.swagger import swagger_bp
 
-app = create_app("ProductionConfig")
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
 
-with app.app_context():
-    # db.drop_all()
-    db.create_all()
+    db.init_app(app)
+    limiter.init_app(app)
+    cache.init_app(app)
 
-# --- Signup route for registering new customers ---
-@app.route('/auth/signup', methods=['POST'])
-def signup():
-    data = request.get_json()
-    email = data.get('email')
-    if not email or not data.get('password'):
-        return jsonify({'message': 'Email and password required'}), 400
-    if Customer.query.filter_by(email=email).first():
-        return jsonify({'message': 'Email already registered'}), 400
-    customer = Customer(
-        first_name=data.get('first_name', ''),
-        last_name=data.get('last_name', ''),
-        email=email,
-        phone=data.get('phone', ''),
-        password=data.get('password'),
-        address=data.get('address', ''),
-        dob=data.get('dob')
-    )
-    db.session.add(customer)
-    db.session.commit()
-    return jsonify({'message': 'Customer registered successfully', 'id': customer.id}), 201
+    app.register_blueprint(customers_bp, url_prefix='/customers')
+    app.register_blueprint(mechanics_bp, url_prefix='/mechanics')
+    app.register_blueprint(service_tickets_bp, url_prefix='/service-tickets')
+    app.register_blueprint(inventory_bp, url_prefix='/inventory')
+    app.register_blueprint(swagger_bp)
+
+    return app
+
+app = create_app(ProductionConfig)
