@@ -1,16 +1,13 @@
 from flask import Flask
-from config import ProductionConfig, Config
+from config import ProductionConfig, DevelopmentConfig
 from app.extensions import db, limiter, cache
-from app.blueprints.customers import customers_bp
-from app.blueprints.mechanics import mechanics_bp
-from app.blueprints.service_tickets import service_tickets_bp
-from app.blueprints.inventory import inventory_bp
-from app.swagger import swagger_bp
 
-def create_app(config_class=Config):
-        with app.app_context():
-            from app import models  # Ensure models are imported so tables are created
-            db.create_all()
+from app.blueprints.customers.routes import customers_bp as customer_bp
+from app.blueprints.mechanics.routes import mechanics_bp as mechanic_bp
+from app.blueprints.service_tickets.routes import service_tickets_bp as service_ticket_bp
+from app.blueprints.inventory.routes import inventory_bp
+
+def create_app(config_class=DevelopmentConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -18,11 +15,13 @@ def create_app(config_class=Config):
     limiter.init_app(app)
     cache.init_app(app)
 
-    app.register_blueprint(customers_bp, url_prefix='/customers')
-    app.register_blueprint(mechanics_bp, url_prefix='/mechanics')
-    app.register_blueprint(service_tickets_bp, url_prefix='/service-tickets')
-    app.register_blueprint(inventory_bp, url_prefix='/inventory')
-    app.register_blueprint(swagger_bp)
+    with app.app_context():
+        db.create_all()
+
+    app.register_blueprint(customer_bp)
+    app.register_blueprint(mechanic_bp)
+    app.register_blueprint(service_ticket_bp)
+    app.register_blueprint(inventory_bp)
 
     return app
 
