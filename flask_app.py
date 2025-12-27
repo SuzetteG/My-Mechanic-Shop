@@ -8,6 +8,9 @@ from app.blueprints.inventory import inventory_bp
 from app.swagger import swagger_bp
 
 def create_app(config_class=Config):
+        with app.app_context():
+            from app import models  # Ensure models are imported so tables are created
+            db.create_all()
     app = Flask(__name__)
     app.config.from_object(config_class)
 
