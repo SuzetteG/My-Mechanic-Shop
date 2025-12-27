@@ -1,7 +1,6 @@
 from app import create_app
 from app.extensions import db
 from flask import request, jsonify
-from app.blueprints import Customer
 
 app = create_app("ProductionConfig")
 
