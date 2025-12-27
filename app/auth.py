@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
-from application.blueprints.models import Customer
-from application.extensions import db
+from app.models import Customer
+from app.extensions import db
 import jwt
 from datetime import datetime, timedelta, timezone
 from functools import wraps

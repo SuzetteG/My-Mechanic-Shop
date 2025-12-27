@@ -1,5 +1,4 @@
-
-# Inventory routes placeholder
+from flask import request, jsonify
 from . import inventory_bp
 
 # DELETE route for inventory item by id
@@ -30,8 +29,8 @@ def inventory_home():
 
 # Sample PUT route to update an inventory item by item_id
 from flask import request, jsonify
-from application.blueprints.models import Inventory
-from application.extensions import db
+from app.models import Inventory
+from app.extensions import db
 
 @inventory_bp.route('/<int:item_id>', methods=['PUT'])
 def update_inventory_item(item_id):
@@ -59,15 +58,18 @@ def get_inventory_item(item_id):
     return jsonify({'id': item.id, 'name': item.name, 'quantity': item.quantity, 'price': float(item.price) if item.price is not None else None})
 
 
+
 # POST route to create a new inventory item
+from .schemas import InventorySchema
+from marshmallow import ValidationError
+
 @inventory_bp.route('/', methods=['POST'])
 def create_inventory_item():
-    data = request.get_json()
-    name = data.get('name')
-    quantity = data.get('quantity')
-    if not name or quantity is None:
-        return jsonify({'error': 'Name and quantity are required'}), 400
-    item = Inventory(name=name, quantity=quantity)
+    data = request.get_json() or {}
+    try:
+        item = InventorySchema().load(data, session=db.session)
+    except ValidationError as err:
+        return jsonify({'errors': err.messages}), 400
     db.session.add(item)
     db.session.commit()
-    return jsonify({'message': 'Inventory item created', 'item': {'id': item.id, 'name': item.name, 'quantity': item.quantity}}), 201
+    return InventorySchema().dump(item), 201

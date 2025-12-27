@@ -1,9 +1,9 @@
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
-from application.extensions import db, cache
-from application.blueprints.models import Mechanic, ServiceTicket, service_ticket_mechanics
-from . import mechanic_bp
+from app.extensions import db, cache
+from app.models import Mechanic, ServiceTicket, service_ticket_mechanics
+from . import mechanics_bp
 from .schemas import MechanicSchema
 
 mechanic_schema = MechanicSchema()
@@ -12,7 +12,7 @@ mechanics_schema = MechanicSchema(many=True)
 # GET /mechanics/most-worked
 from sqlalchemy import func
 
-@mechanic_bp.get("/most-worked")
+@mechanics_bp.get("/most-worked")
 def mechanics_most_worked():
     """
     Returns mechanics ordered by how many tickets they've worked on (descending).
@@ -45,7 +45,7 @@ def mechanics_most_worked():
         for r in rows
     ]), 200
 
-@mechanic_bp.post("/")
+@mechanics_bp.post("/")
 def create_mechanic():
     try:
         mechanic = mechanic_schema.load(request.json or {}, session=db.session)
@@ -56,13 +56,13 @@ def create_mechanic():
     cache.delete_memoized(get_mechanics)
     return mechanic_schema.dump(mechanic), 201
 
-@mechanic_bp.get("/")
+@mechanics_bp.get("/")
 @cache.cached(timeout=60)
 def get_mechanics():
     mechanics = db.session.scalars(select(Mechanic)).all()
     return mechanics_schema.dump(mechanics), 200
 
-@mechanic_bp.put("/<int:id>")
+@mechanics_bp.put("/<int:id>")
 def update_mechanic(id):
     mechanic = db.session.get(Mechanic, id)
     if not mechanic:
@@ -75,7 +75,7 @@ def update_mechanic(id):
     cache.delete_memoized(get_mechanics)
     return mechanic_schema.dump(mechanic), 200
 
-@mechanic_bp.delete("/<int:id>")
+@mechanics_bp.delete("/<int:id>")
 def delete_mechanic(id):
     mechanic = db.session.get(Mechanic, id)
     if not mechanic:

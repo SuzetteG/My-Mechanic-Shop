@@ -1,0 +1,34 @@
+My_Mechanic_Shop/
+├── run.py
+├── config.py
+├── requirements.txt
+├── .env                     # (local only, don’t commit)
+├── app/
+│   ├── __init__.py           # create_app(), register blueprints, init swagger UI
+│   ├── extensions.py         # db, ma, limiter, cache, swagger config helpers
+│   ├── models.py             # SQLAlchemy models (Customer, Mechanic, ServiceTicket, join table, Inventory)
+│   ├── auth.py               # encode_token(), token_required, login_schema helper
+│   ├── swagger/
+│   │   ├── __init__.py       # swagger UI blueprint setup
+│   │   └── swagger.yaml      # OpenAPI spec (all routes documented)
+│   └── blueprints/
+│       ├── customers/
+│       │   ├── __init__.py
+│       │   ├── routes.py
+│       │   └── schemas.py
+│       ├── mechanics/
+│       │   ├── __init__.py
+│       │   ├── routes.py
+│       │   └── schemas.py
+│       ├── service_tickets/
+│       │   ├── __init__.py
+│       │   ├── routes.py
+│       │   └── schemas.py
+│       └── inventory/
+│           ├── __init__.py
+│           ├── routes.py
+│           └── schemas.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_customers.py
+│   ├── test_mech_

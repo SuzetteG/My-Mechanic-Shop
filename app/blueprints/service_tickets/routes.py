@@ -1,13 +1,14 @@
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
-from application.extensions import db, limiter
-from application.blueprints.models import ServiceTicket, Mechanic, Inventory
-from . import service_ticket_bp
+from app.extensions import db, limiter
+from app.models import ServiceTicket, Mechanic, Inventory
+from . import service_tickets_bp
 from .schemas import ServiceTicketSchema
+from app.auth import token_required
 
 # Add a part (inventory item) to a service ticket
-@service_ticket_bp.route('/<int:ticket_id>/add-part', methods=['POST'])
+@service_tickets_bp.route('/<int:ticket_id>/add-part', methods=['POST'])
 def add_part_to_ticket(ticket_id):
     ticket = ServiceTicket.query.get(ticket_id)
     if not ticket:
@@ -25,16 +26,16 @@ def add_part_to_ticket(ticket_id):
     return jsonify({'message': f'Part {part_id} (qty {quantity}) added to ticket {ticket_id}'}), 200
 from marshmallow import ValidationError
 from sqlalchemy import select
-from application.extensions import db, limiter
-from application.blueprints.models import ServiceTicket, Mechanic
-from . import service_ticket_bp
+from app.extensions import db, limiter
+from app.models import ServiceTicket, Mechanic
+from . import service_tickets_bp
 from .schemas import ServiceTicketSchema
 
 ticket_schema = ServiceTicketSchema()
 tickets_schema = ServiceTicketSchema(many=True)
 
 # Batch update mechanics for a service ticket
-@service_ticket_bp.put("/<int:ticket_id>/edit")
+@service_tickets_bp.put("/<int:ticket_id>/edit")
 def edit_ticket_mechanics(ticket_id):
     """
     PUT /service-tickets/<ticket_id>/edit
@@ -91,23 +92,29 @@ def edit_ticket_mechanics(ticket_id):
     db.session.commit()
     return ticket_schema.dump(ticket), 200
 
-@service_ticket_bp.post("/")
+@service_tickets_bp.post("/")
+@token_required
 @limiter.limit("5 per hour")
-def create_service_ticket():
+def create_ticket(customer_id):
     try:
-        ticket = ticket_schema.load(request.json or {}, session=db.session)
+        payload = request.json or {}
+        # If your schema needs customer_id, inject it:
+        payload["customer_id"] = payload.get("customer_id") or customer_id
+
+        ticket = ticket_schema.load(payload, session=db.session)
     except ValidationError as e:
         return jsonify(e.messages), 400
+
     db.session.add(ticket)
     db.session.commit()
     return ticket_schema.dump(ticket), 201
 
-@service_ticket_bp.get("/")
+@service_tickets_bp.get("/")
 def get_service_tickets():
     tickets = db.session.scalars(select(ServiceTicket)).all()
     return tickets_schema.dump(tickets), 200
 
-@service_ticket_bp.put("/<int:ticket_id>/assign-mechanic/<int:mechanic_id>")
+@service_tickets_bp.put("/<int:ticket_id>/assign-mechanic/<int:mechanic_id>")
 @limiter.limit("10 per minute")
 def assign_mechanic(ticket_id, mechanic_id):
     ticket = db.session.get(ServiceTicket, ticket_id)
@@ -122,7 +129,7 @@ def assign_mechanic(ticket_id, mechanic_id):
     db.session.commit()
     return jsonify({"message": f"Mechanic {mechanic_id} assigned to ticket {ticket_id}"}), 200
 
-@service_ticket_bp.put("/<int:ticket_id>/remove-mechanic/<int:mechanic_id>")
+@service_tickets_bp.put("/<int:ticket_id>/remove-mechanic/<int:mechanic_id>")
 def remove_mechanic(ticket_id, mechanic_id):
     ticket = db.session.get(ServiceTicket, ticket_id)
     if not ticket:

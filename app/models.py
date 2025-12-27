@@ -1,5 +1,5 @@
 from datetime import datetime
-from ..extensions import db
+from app.extensions import db
 
 # Junction table for many-to-many relationship between ServiceTicket and Mechanic
 service_ticket_mechanics = db.Table(

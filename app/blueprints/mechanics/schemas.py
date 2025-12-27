@@ -1,5 +1,5 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from application.blueprints.models import Mechanic
+from app.models import Mechanic
 
 class MechanicSchema(SQLAlchemyAutoSchema):
 	class Meta:
@@ -10,7 +10,7 @@ class MechanicSchema(SQLAlchemyAutoSchema):
 mechanic_schema = MechanicSchema()
 mechanics_schema = MechanicSchema(many=True)
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from application.blueprints.models import Mechanic
+from app.models import Mechanic
 
 class MechanicSchema(SQLAlchemyAutoSchema):
     class Meta:

@@ -1,14 +1,15 @@
 
-from application import create_app
-from application.extensions import db
+from app import create_app
+from app.extensions import db
 from flask import request, jsonify
-from application.blueprints.models import Customer
+from app.blueprints import Customer
 
 app = create_app()
 
 with app.app_context():
     # db.drop_all()
     db.create_all()
+    app.run(debug=True)
 
 # --- Signup route for registering new customers ---
 @app.route('/auth/signup', methods=['POST'])

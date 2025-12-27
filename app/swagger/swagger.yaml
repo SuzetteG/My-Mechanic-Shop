@@ -1,0 +1,342 @@
+openapi: 3.0.0
+info:
+  title: My_Mechanic_Shop API
+  version: "1.0.0"
+  description: API for Customers, Mechanics, Service Tickets, and Inventory.
+
+servers:
+  - url: /
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Customers
+  - name: Mechanics
+  - name: Service Tickets
+  - name: Inventory
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ====== AUTH ======
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          example: "jane@test.com"
+        password:
+          type: string
+          example: "Pass123!"
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid payload"
+
+    # ====== CUSTOMERS ======
+    CustomerCreateRequest:
+      type: object
+      required: [first_name, last_name, email, phone, password, address, dob]
+      properties:
+        first_name: { type: string, example: "Jane" }
+        last_name:  { type: string, example: "Doe" }
+        email:      { type: string, example: "jane@test.com" }
+        phone:      { type: string, example: "5205551234" }
+        password:   { type: string, example: "Pass123!" }
+        address:    { type: string, example: "123 Main St, Tucson, AZ 85701" }
+        dob:        { type: string, format: date, example: "2000-01-01" }
+
+    CustomerUpdateRequest:
+      type: object
+      properties:
+        name: { type: string, example: "Jane Updated" }
+        email: { type: string, example: "jane2@test.com" }
+
+    CustomerResponse:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Jane Doe" }
+        email: { type: string, example: "jane@test.com" }
+
+    # ====== MECHANICS ======
+    MechanicCreateRequest:
+      type: object
+      required: [name, specialty]
+      properties:
+        name: { type: string, example: "Mike Mechanic" }
+        specialty: { type: string, example: "Brakes" }
+
+    MechanicResponse:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Mike Mechanic" }
+        specialty: { type: string, example: "Brakes" }
+
+    # ====== SERVICE TICKETS ======
+    ServiceTicketCreateRequest:
+      type: object
+      required: [description, customer_id]
+      properties:
+        description: { type: string, example: "Oil change + inspection" }
+        customer_id: { type: integer, example: 1 }
+
+    ServiceTicketResponse:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        description: { type: string, example: "Oil change + inspection" }
+        customer_id: { type: integer, example: 1 }
+
+    # ====== INVENTORY ======
+    InventoryCreateRequest:
+      type: object
+      required: [name, price]
+      properties:
+        name:  { type: string, example: "Oil Filter" }
+        price: { type: number, example: 9.99 }
+    BulkEditMechanicsRequest:
+      type: object
+      properties:
+        add_ids:
+          type: array
+          items: { type: integer }
+          example: [1, 2]
+        remove_ids:
+          type: array
+          items: { type: integer }
+          example: [3]
+
+    InventoryResponse:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Oil Filter" }
+        quantity: { type: integer, example: 10 }
+
+paths:
+            /inventory/:
+              get:
+                tags: [Inventory]
+                summary: Get all inventory parts
+                responses:
+                  "200":
+                    description: OK
+
+              post:
+                tags: [Inventory]
+                summary: Create inventory part
+                requestBody:
+                  required: true
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/InventoryCreateRequest"
+                responses:
+                  "201":
+                    description: Created
+                  "400":
+                    description: Validation error
+
+            /inventory/{id}:
+              put:
+                tags: [Inventory]
+                summary: Update inventory part
+                parameters:
+                  - in: path
+                    name: id
+                    required: true
+                    schema: { type: integer }
+                requestBody:
+                  required: true
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/InventoryCreateRequest"
+                responses:
+                  "200":
+                    description: Updated
+                  "404":
+                    description: Not found
+
+              delete:
+                tags: [Inventory]
+                summary: Delete inventory part
+                parameters:
+                  - in: path
+                    name: id
+                    required: true
+                    schema: { type: integer }
+                responses:
+                  "200":
+                    description: Deleted
+                  "404":
+                    description: Not found
+          /service-tickets/{ticket_id}/edit:
+            put:
+              tags: [Service Tickets]
+              summary: Bulk edit mechanics on a service ticket
+              description: Accepts add_ids and remove_ids to update mechanic assignments. :contentReference[oaicite:17]{index=17}
+              parameters:
+                - in: path
+                  name: ticket_id
+                  required: true
+                  schema: { type: integer }
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/BulkEditMechanicsRequest"
+              responses:
+                "200":
+                  description: Updated
+                "404":
+                  description: Ticket not found
+
+          /service-tickets/{ticket_id}/add-part/{part_id}:
+            put:
+              tags: [Service Tickets]
+              summary: Add inventory part to ticket
+              description: Adds a single inventory part to an existing ticket. :contentReference[oaicite:18]{index=18}
+              parameters:
+                - in: path
+                  name: ticket_id
+                  required: true
+                  schema: { type: integer }
+                - in: path
+                  name: part_id
+                  required: true
+                  schema: { type: integer }
+              responses:
+                "200":
+                  description: Added
+                "404":
+                  description: Ticket or part not found
+        /mechanics/:
+          get:
+            tags: [Mechanics]
+            summary: Get all mechanics
+            description: Cached route to improve performance. :contentReference[oaicite:15]{index=15}
+            responses:
+              "200":
+                description: OK
+
+        /mechanics/most-worked:
+          get:
+            tags: [Mechanics]
+            summary: Mechanics leaderboard
+            description: Returns mechanics ordered by number of tickets worked. :contentReference[oaicite:16]{index=16}
+            responses:
+              "200":
+                description: OK
+      /customers/my-tickets:
+        get:
+          tags: [Customers]
+          summary: Get tickets for the authenticated customer
+          description: Protected route. Requires Bearer token. :contentReference[oaicite:14]{index=14}
+          security:
+            - bearerAuth: []
+          responses:
+            "200":
+              description: OK
+            "401":
+              description: Missing/invalid token
+    /customers/login:
+      post:
+        tags: [Auth]
+        summary: Customer login
+        description: |
+          Logs in with email/password and returns JWT.
+          Rate limited to prevent brute-force attacks. :contentReference[oaicite:13]{index=13}
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginRequest"
+        responses:
+          "200":
+            description: Token returned
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/TokenResponse"
+          "401":
+            description: Invalid credentials
+  /:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Confirms the API is running.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                status: ok
+                app: My_Mechanic_Shop
+
+  /customers/:
+    get:
+      tags: [Customers]
+      summary: Get customers (supports pagination)
+      description: |
+        Returns customers.
+        Supports pagination with ?page=1&per_page=5. :contentReference[oaicite:12]{index=12}
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, example: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, example: 5 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                - id: 1
+                  first_name: Jane
+                  last_name: Doe
+                  email: jane@test.com
+
+    post:
+      tags: [Customers]
+      summary: Create a customer
+      description: Creates a customer record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerCreateRequest"
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+

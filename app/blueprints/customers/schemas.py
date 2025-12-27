@@ -1,15 +1,16 @@
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+
 from marshmallow import fields
-from application.blueprints.models import Customer, Mechanic, ServiceTicket
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from app.models import Customer, Mechanic, ServiceTicket
+from app.extensions import db
 
 class CustomerSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Customer
         load_instance = True
-        include_fk = True
-    password = fields.String(load_only=True)
-    address = fields.String(required=True)
-    dob = fields.Date(required=True)
+        sqla_session = db.session
+
+    password = fields.String(required=True, load_only=True)
 
 from marshmallow import Schema, fields
 

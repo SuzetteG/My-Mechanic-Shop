@@ -1,6 +1,6 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow import fields
-from application.blueprints.models import ServiceTicket, Mechanic
+from app.models import ServiceTicket, Mechanic
 
 class MechanicMiniSchema(SQLAlchemyAutoSchema):
 	class Meta:

@@ -2,10 +2,10 @@ from flask import request, jsonify
 from . import customers_bp
 from marshmallow import ValidationError
 from sqlalchemy import select
-from application.extensions import db, limiter
-from application.blueprints.models import Customer, ServiceTicket
-from application.utils.util import encode_token, token_required
-from .userSchemas import CustomerSchema, LoginSchema
+from app.extensions import db, limiter
+from app.models import Customer, ServiceTicket
+from app.utils.util import encode_token, token_required
+from .schemas import CustomerSchema, LoginSchema
 
 customer_schema = CustomerSchema()
 customers_schema = CustomerSchema(many=True)
@@ -18,15 +18,22 @@ def get_customer(id):
         return jsonify({"error": "Customer not found"}), 404
     return customer_schema.dump(customer), 200
 
+
 @customers_bp.post("/")
 def create_customer():
+    data = request.get_json() or {}
+
+
     try:
-        customer = customer_schema.load(request.json or {}, session=db.session)
-    except ValidationError as e:
-        return jsonify(e.messages), 400
+        valid_data = CustomerSchema().load(data, session=db.session)
+    except ValidationError as err:
+        return jsonify({"errors": err.messages}), 400
+
+    customer = valid_data
     db.session.add(customer)
     db.session.commit()
-    return customer_schema.dump(customer), 201
+
+    return CustomerSchema().dump(customer), 201
 
 @customers_bp.get("/")
 def get_customers():
@@ -64,13 +71,7 @@ def get_customers():
 
     pages = (total + per_page - 1) // per_page if total else 0
 
-    return jsonify({
-        "page": page,
-        "per_page": per_page,
-        "total": total,
-        "pages": pages,
-        "items": customers_schema.dump(customers)
-    }), 200
+    return customers_schema.dump(customers), 200
 
 @customers_bp.put("/<int:id>")
 def update_customer(id):
@@ -109,10 +110,13 @@ def login():
     token = encode_token(customer.id)
     return jsonify({"token": token}), 200
 
+from app.auth import token_required
+
 @customers_bp.get("/my-tickets")
-def my_tickets():
-    # For demo, get all tickets (no user filtering)
-    tickets = db.session.scalars(select(ServiceTicket)).all()
+@token_required
+def my_tickets(customer_id):
+    # Only return tickets for the authenticated customer
+    tickets = db.session.scalars(select(ServiceTicket).where(ServiceTicket.customer_id == customer_id)).all()
     data = [
         {
             "id": t.id,
