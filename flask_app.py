@@ -2,11 +2,11 @@ from flask import Flask
 from config import ProductionConfig
 from app.extensions import db, limiter, cache
 
-from app.blueprints.customers.routes import customers_bp
-from app.blueprints.inventory.routes import inventory_bp
-from app.blueprints.mechanics.routes import mechanic_bp
-from app.blueprints.service_tickets.routes import service_tickets_bp
-from app.blueprints.auth.routes import auth_bp
+from app.blueprints.customers import customers_bp
+from app.blueprints.inventory import inventory_bp
+from app.blueprints.mechanics import mechanic_bp
+from app.blueprints.service_tickets import service_tickets_bp
+from app.blueprints.auth import auth_bp
 
 def create_app():
     app = Flask(__name__)
