@@ -3,25 +3,27 @@ from marshmallow import ValidationError
 from sqlalchemy import select
 from app.extensions import db, cache
 from app.models import Mechanic, ServiceTicket, service_ticket_mechanics
-from . import mechanics_bp
+from flask import Blueprint, request, jsonify
+from marshmallow import ValidationError
+from sqlalchemy import select, func
+from app.extensions import db, cache
+from app.models import Mechanic, ServiceTicket, service_ticket_mechanics
 from .schemas import MechanicSchema
+
+mechanics_bp = Blueprint(
+    "mechanics",
+    __name__,
+    url_prefix="/mechanics"
+)
 
 mechanic_schema = MechanicSchema()
 mechanics_schema = MechanicSchema(many=True)
 
 # GET /mechanics/most-worked
-from sqlalchemy import func
-
 @mechanics_bp.get("/most-worked")
 def mechanics_most_worked():
-from . import mechanics_bp  # This line is being replaced
-from flask import Blueprint
+    """
     Returns mechanics ordered by how many tickets they've worked on (descending).
-mechanic_bp = Blueprint(
-    "mechanics",
-    __name__,
-    url_prefix="/mechanics"
-)
     Useful for dashboard/reporting, staffing, or "top contributors".
     """
     stmt = (
