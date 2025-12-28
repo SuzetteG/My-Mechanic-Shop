@@ -132,155 +132,160 @@ components:
         quantity: { type: integer, example: 10 }
 
 paths:
-            /inventory/:
-              get:
-                tags: [Inventory]
-                summary: Get all inventory parts
-                responses:
-                  "200":
-                    description: OK
+  /inventory/:
+    get:
+      tags: [Inventory]
+      summary: Get all inventory parts
+      responses:
+        "200":
+          description: OK
 
-              post:
-                tags: [Inventory]
-                summary: Create inventory part
-                requestBody:
-                  required: true
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/InventoryCreateRequest"
-                responses:
-                  "201":
-                    description: Created
-                  "400":
-                    description: Validation error
+    post:
+      tags: [Inventory]
+      summary: Create inventory part
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryCreateRequest"
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Validation error
 
-            /inventory/{id}:
-              put:
-                tags: [Inventory]
-                summary: Update inventory part
-                parameters:
-                  - in: path
-                    name: id
-                    required: true
-                    schema: { type: integer }
-                requestBody:
-                  required: true
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/InventoryCreateRequest"
-                responses:
-                  "200":
-                    description: Updated
-                  "404":
-                    description: Not found
-
-              delete:
-                tags: [Inventory]
-                summary: Delete inventory part
-                parameters:
-                  - in: path
-                    name: id
-                    required: true
-                    schema: { type: integer }
-                responses:
-                  "200":
-                    description: Deleted
-                  "404":
-                    description: Not found
-          /service-tickets/{ticket_id}/edit:
-            put:
-              tags: [Service Tickets]
-              summary: Bulk edit mechanics on a service ticket
-              description: Accepts add_ids and remove_ids to update mechanic assignments. :contentReference[oaicite:17]{index=17}
-              parameters:
-                - in: path
-                  name: ticket_id
-                  required: true
-                  schema: { type: integer }
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      $ref: "#/components/schemas/BulkEditMechanicsRequest"
-              responses:
-                "200":
-                  description: Updated
-                "404":
-                  description: Ticket not found
-
-          /service-tickets/{ticket_id}/add-part/{part_id}:
-            put:
-              tags: [Service Tickets]
-              summary: Add inventory part to ticket
-              description: Adds a single inventory part to an existing ticket. :contentReference[oaicite:18]{index=18}
-              parameters:
-                - in: path
-                  name: ticket_id
-                  required: true
-                  schema: { type: integer }
-                - in: path
-                  name: part_id
-                  required: true
-                  schema: { type: integer }
-              responses:
-                "200":
-                  description: Added
-                "404":
-                  description: Ticket or part not found
-        /mechanics/:
-          get:
-            tags: [Mechanics]
-            summary: Get all mechanics
-            description: Cached route to improve performance. :contentReference[oaicite:15]{index=15}
-            responses:
-              "200":
-                description: OK
-
-        /mechanics/most-worked:
-          get:
-            tags: [Mechanics]
-            summary: Mechanics leaderboard
-            description: Returns mechanics ordered by number of tickets worked. :contentReference[oaicite:16]{index=16}
-            responses:
-              "200":
-                description: OK
-      /customers/my-tickets:
-        get:
-          tags: [Customers]
-          summary: Get tickets for the authenticated customer
-          description: Protected route. Requires Bearer token. :contentReference[oaicite:14]{index=14}
-          security:
-            - bearerAuth: []
-          responses:
-            "200":
-              description: OK
-            "401":
-              description: Missing/invalid token
-    /customers/login:
-      post:
-        tags: [Auth]
-        summary: Customer login
-        description: |
-          Logs in with email/password and returns JWT.
-          Rate limited to prevent brute-force attacks. :contentReference[oaicite:13]{index=13}
-        requestBody:
+  /inventory/{id}:
+    put:
+      tags: [Inventory]
+      summary: Update inventory part
+      parameters:
+        - in: path
+          name: id
           required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryCreateRequest"
+      responses:
+        "200":
+          description: Updated
+        "404":
+          description: Not found
+
+    delete:
+      tags: [Inventory]
+      summary: Delete inventory part
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /service-tickets/{ticket_id}/edit:
+    put:
+      tags: [Service Tickets]
+      summary: Bulk edit mechanics on a service ticket
+      description: Accepts add_ids and remove_ids to update mechanic assignments.
+      parameters:
+        - in: path
+          name: ticket_id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkEditMechanicsRequest"
+      responses:
+        "200":
+          description: Updated
+        "404":
+          description: Ticket not found
+
+  /service-tickets/{ticket_id}/add-part/{part_id}:
+    put:
+      tags: [Service Tickets]
+      summary: Add inventory part to ticket
+      description: Adds a single inventory part to an existing ticket.
+      parameters:
+        - in: path
+          name: ticket_id
+          required: true
+          schema: { type: integer }
+        - in: path
+          name: part_id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Added
+        "404":
+          description: Ticket or part not found
+
+  /mechanics/:
+    get:
+      tags: [Mechanics]
+      summary: Get all mechanics
+      description: Cached route to improve performance.
+      responses:
+        "200":
+          description: OK
+
+  /mechanics/most-worked:
+    get:
+      tags: [Mechanics]
+      summary: Mechanics leaderboard
+      description: Returns mechanics ordered by number of tickets worked.
+      responses:
+        "200":
+          description: OK
+
+  /customers/my-tickets:
+    get:
+      tags: [Customers]
+      summary: Get tickets for the authenticated customer
+      description: Protected route. Requires Bearer token.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Missing/invalid token
+
+  /customers/login:
+    post:
+      tags: [Auth]
+      summary: Customer login
+      description: |
+        Logs in with email/password and returns JWT.
+        Rate limited to prevent brute-force attacks.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Token returned
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LoginRequest"
-        responses:
-          "200":
-            description: Token returned
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/TokenResponse"
-          "401":
-            description: Invalid credentials
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
+          description: Invalid credentials
+
   /:
     get:
       tags: [Health]
@@ -301,7 +306,7 @@ paths:
       summary: Get customers (supports pagination)
       description: |
         Returns customers.
-        Supports pagination with ?page=1&per_page=5. :contentReference[oaicite:12]{index=12}
+        Supports pagination with ?page=1&per_page=5.
       parameters:
         - in: query
           name: page
