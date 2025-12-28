@@ -16,7 +16,7 @@ class Config:
 
 # Production configuration
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///local.db")
     CACHE_TYPE = "SimpleCache"
    
 

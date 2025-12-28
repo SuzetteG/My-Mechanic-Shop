@@ -11,7 +11,6 @@ with app.app_context():
     db.create_all()
     app.run(debug=True)
 
-# --- Signup route for registering new customers ---
 @app.route('/auth/signup', methods=['POST'])
 def signup():
     data = request.get_json()
