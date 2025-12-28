@@ -11,11 +11,6 @@ mechanic_bp = Blueprint(
 )
 from .schemas import MechanicSchema
 
-mechanics_bp = Blueprint(
-    "mechanics",
-    __name__,
-    url_prefix="/mechanics"
-)
 
 mechanic_schema = MechanicSchema()
 mechanics_schema = MechanicSchema(many=True)
