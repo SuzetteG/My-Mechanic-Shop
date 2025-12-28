@@ -6,7 +6,9 @@ from app.blueprints.customers import customers_bp
 from app.blueprints.inventory import inventory_bp
 from app.blueprints.mechanics import mechanic_bp
 from app.blueprints.service_tickets import service_tickets_bp
+
 from app.blueprints.auth import auth_bp
+from app.swagger import swagger_bp
 
 def create_app():
     app = Flask(__name__)
@@ -23,7 +25,9 @@ def create_app():
     app.register_blueprint(inventory_bp)
     app.register_blueprint(mechanic_bp)
     app.register_blueprint(service_tickets_bp)
+
     app.register_blueprint(auth_bp)
+    app.register_blueprint(swagger_bp)
 
     print("Registered blueprints:", app.blueprints.keys())
     return app
