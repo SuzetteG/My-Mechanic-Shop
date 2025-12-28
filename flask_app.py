@@ -25,6 +25,7 @@ def create_app():
     app.register_blueprint(service_tickets_bp)
     app.register_blueprint(auth_bp)
 
+    print("Registered blueprints:", app.blueprints.keys())
     return app
 
 app = create_app()
