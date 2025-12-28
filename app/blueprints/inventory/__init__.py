@@ -1,5 +1,2 @@
-from flask import Blueprint
 
-inventory_bp = Blueprint("inventory_bp", __name__, url_prefix="/inventory")
-
-from . import routes  # noqa: E402,F401
+from .routes import inventory_bp

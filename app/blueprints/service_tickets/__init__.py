@@ -1,5 +1,2 @@
-from flask import Blueprint
 
-service_tickets_bp = Blueprint("service_tickets_bp", __name__, url_prefix="/service-tickets")
-
-from . import routes  # noqa: E402,F401
+from .routes import service_tickets_bp
