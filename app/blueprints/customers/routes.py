@@ -100,20 +100,6 @@ def delete_customer(user_id):
     db.session.commit()
     return jsonify({"message": f"Customer {user_id} deleted"}), 200
 
-@customers_bp.post("/login")
-@limiter.limit("10 per minute")
-def login():
-    try:
-        creds = login_schema.load(request.json or {})
-    except ValidationError as e:
-        return jsonify(e.messages), 400
-    email = creds["email"]
-    password = creds["password"]
-    customer = db.session.scalar(select(Customer).where(Customer.email == email))
-    if not customer or customer.password != password:
-        return jsonify({"error": "Invalid credentials"}), 401
-    token = encode_token(customer.id)
-    return jsonify({"token": token}), 200
 
 from app.auth import token_required
 

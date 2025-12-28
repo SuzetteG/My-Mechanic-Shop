@@ -3,9 +3,10 @@ from config import ProductionConfig
 from app.extensions import db, limiter, cache
 
 from app.blueprints.customers.routes import customers_bp
-from app.blueprints.mechanics.routes import mechanics_bp
-from app.blueprints.service_tickets.routes import service_tickets_bp
 from app.blueprints.inventory.routes import inventory_bp
+from app.blueprints.mechanics.routes import mechanic_bp
+from app.blueprints.service_tickets.routes import service_tickets_bp
+from app.blueprints.auth.routes import auth_bp
 
 def create_app():
     app = Flask(__name__)
@@ -19,9 +20,10 @@ def create_app():
         db.create_all()
 
     app.register_blueprint(customers_bp)
-    app.register_blueprint(mechanics_bp)
-    app.register_blueprint(service_tickets_bp)
     app.register_blueprint(inventory_bp)
+    app.register_blueprint(mechanic_bp)
+    app.register_blueprint(service_tickets_bp)
+    app.register_blueprint(auth_bp)
 
     return app
 
