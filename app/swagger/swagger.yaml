@@ -6,9 +6,6 @@ info:
 
 servers:
   - url: https://my-mechanic-shop-stv8.onrender.com
-host: my-mechanic-shop-stv8.onrender.com
-schemes:
-  - https
 
 tags:
   - name: Health
