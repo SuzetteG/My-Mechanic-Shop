@@ -10,6 +10,7 @@ auth_bp = Blueprint("auth", __name__)
 login_schema = LoginSchema()
 
 @auth_bp.route("/login", methods=["POST"])
+@auth_bp.route("/customers/login", methods=["POST"])
 @limiter.limit("10 per minute")
 def login():
     try:

@@ -33,7 +33,6 @@ from marshmallow import ValidationError
 from sqlalchemy import select
 from app.extensions import db, limiter
 from app.models import ServiceTicket, Mechanic
-from . import service_tickets_bp
 from .schemas import ServiceTicketSchema
 
 ticket_schema = ServiceTicketSchema()
