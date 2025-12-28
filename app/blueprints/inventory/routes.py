@@ -1,5 +1,10 @@
-from flask import request, jsonify
-from . import inventory_bp
+from flask import Blueprint, request, jsonify
+
+inventory_bp = Blueprint(
+    "inventory",
+    __name__,
+    url_prefix="/inventory"
+)
 
 # DELETE route for inventory item by id
 @inventory_bp.route('/<int:item_id>', methods=['DELETE'])

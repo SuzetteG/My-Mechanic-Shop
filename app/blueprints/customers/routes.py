@@ -1,5 +1,10 @@
-from flask import request, jsonify
-from . import customers_bp
+from flask import Blueprint, request, jsonify
+
+customer_bp = Blueprint(
+    "customers",
+    __name__,
+    url_prefix="/customers"
+)
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.extensions import db, limiter

@@ -2,7 +2,13 @@ from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.extensions import db, limiter
-from app.models import ServiceTicket, Mechanic, Inventory
+from flask import Blueprint, request, jsonify
+
+service_ticket_bp = Blueprint(
+    "service_tickets",
+    __name__,
+    url_prefix="/service-tickets"
+)
 from . import service_tickets_bp
 from .schemas import ServiceTicketSchema
 from app.auth import token_required

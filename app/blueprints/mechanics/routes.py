@@ -14,8 +14,14 @@ from sqlalchemy import func
 
 @mechanics_bp.get("/most-worked")
 def mechanics_most_worked():
-    """
+from . import mechanics_bp  # This line is being replaced
+from flask import Blueprint
     Returns mechanics ordered by how many tickets they've worked on (descending).
+mechanic_bp = Blueprint(
+    "mechanics",
+    __name__,
+    url_prefix="/mechanics"
+)
     Useful for dashboard/reporting, staffing, or "top contributors".
     """
     stmt = (
